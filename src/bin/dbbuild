@@ -1,0 +1,3 @@
+#!/bin/bash
+
+psql -U acuhlian -d data_golf -f sql/schema.sql
