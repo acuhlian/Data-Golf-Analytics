@@ -1,4 +1,4 @@
 dotenv
 requests
 sqlalchemy
-psycop2-binary
+psycopg2-binary
