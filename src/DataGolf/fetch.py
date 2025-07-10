@@ -1,8 +1,8 @@
-import os
-import json
 import requests
 from typing import Any, Union
 from config import APIKey
+from utils import normalize_stat_category
+
 
 def fetch (url) :
     response = requests.get(url)
@@ -33,6 +33,35 @@ def fetch_player_skill_ratings(file_format="json") -> Any:
     data = fetch(url)
     return data['players']
 
+def fetch_player_skill_app(file_format="json", period="l12"):
+    """Access DataGolf api and return player skill approach specific data.
+        Period: 
+        'l24' - last 24 months, 'l12' - last 12 months 'ytd' - year to date
+    """ 
+    url = f"https://feeds.datagolf.com/preds/approach-skill?period={period}&file_format={file_format}&key={APIKey}"
+    data = fetch(url)
+
+    total_data = []
+    # normalize data
+    for player in data['data']:
+        normal_data = {}
+        for cat in player:
+            # Parse stat category with '_' as delimiter
+            cat_list = cat.split('_')
+            # Check no bounds errors
+            if len(cat_list) < 3:
+                continue
+            # Select distance category e.g. 100_150
+            cat_type = cat_list[0] + "_" + cat_list[1]
+            stat_type = "_".join(cat_list[3:])
+            full_cat = cat_type + "_" + cat_list[2]
+            # Pass normal_data dictionary in to be normalizeed
+            normalize_stat_category(normal_data, stat_type, player, cat, full_cat)
+        normal_data['player_name'] = player['player_name']
+        normal_data['dg_id'] = player['dg_id']
+        total_data.append(normal_data)
+    return total_data
+
 if __name__ == "__main__":
     #fetch_player_list("json")
-    fetch_player_skill_ratings("json")
+    fetch_player_skill_app()
